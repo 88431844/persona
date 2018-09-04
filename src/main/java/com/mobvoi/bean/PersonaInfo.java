@@ -6,13 +6,14 @@ import java.io.Serializable;
 import java.util.List;
 
 /**
+ * 用户标签
  * created by zhhgao@mobvoi.com on 18-8-21
  */
 public class PersonaInfo implements Serializable {
-  //酷我用户ID
-  private String userID;
-  //标签列表
-  private List<TagInfo> tagInfoList;
+
+  private String userID;//酷我用户ID
+
+  private List<TagInfo> tagInfoList;//标签列表
 
   public String getUserID() {
     return userID;

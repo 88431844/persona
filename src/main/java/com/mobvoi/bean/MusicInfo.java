@@ -2,62 +2,37 @@
 
 package com.mobvoi.bean;
 
+import java.io.Serializable;
+import java.util.Date;
+
 /**
  * created by zhhgao@mobvoi.com on 18-8-21
  */
-@Deprecated
-public class MusicInfo {
+public class MusicInfo implements Serializable {
 
-  //酷我用户ID
-  private String userID;
-  //音乐ID
-  private String musicID;
-  //音乐标题
-  private String musicTitle;
-  //演唱者
-  private String artist;
-  //专辑
-  private String album;
-  //年代
-  private String years;
-  //音乐流派
-  private String musicGenre;
-  //时间戳（13位，单位毫秒）
-  private long timestamp;
-  //音乐来源：推送、搜索、榜单等。
-  private String musicFrom;
-  //音乐时长(单位:秒)
-  private int musicDuration;
-  //播放时长(单位:秒)
-  private int playDuration;
-  //动作：收藏（喜欢）、踩、上一曲、下一曲等。
-  private String musicAction;
+  private String musicID;//音乐ID
 
-  @Override
-  public String toString() {
-    return "MusicInfo{" +
-        "userID='" + userID + '\'' +
-        ", musicID='" + musicID + '\'' +
-        ", musicTitle='" + musicTitle + '\'' +
-        ", artist='" + artist + '\'' +
-        ", album='" + album + '\'' +
-        ", years='" + years + '\'' +
-        ", musicGenre='" + musicGenre + '\'' +
-        ", timestamp=" + timestamp +
-        ", musicFrom='" + musicFrom + '\'' +
-        ", musicDuration=" + musicDuration +
-        ", playDuration=" + playDuration +
-        ", musicAction='" + musicAction + '\'' +
-        '}';
-  }
+  private String musicTitle;//音乐标题
 
-  public String getUserID() {
-    return userID;
-  }
+  private String artist;//演唱者
 
-  public void setUserID(String userID) {
-    this.userID = userID;
-  }
+  private String album;//专辑
+
+  private String years;//年代
+
+  private String musicGenre;//音乐流派
+
+  private String fileType;//文件类型 例如：mp3、acc等
+
+  private int fileSize;//文件大小 单位kb
+
+  private String tags;//英文逗号分隔标签
+
+  private int musicDuration;//音乐时长(单位:秒)
+
+  private Date createdAt;//创建时间
+
+  private Date updatedAt;//修改时间
 
   public String getMusicID() {
     return musicID;
@@ -107,20 +82,28 @@ public class MusicInfo {
     this.musicGenre = musicGenre;
   }
 
-  public long getTimestamp() {
-    return timestamp;
+  public String getFileType() {
+    return fileType;
   }
 
-  public void setTimestamp(long timestamp) {
-    this.timestamp = timestamp;
+  public void setFileType(String fileType) {
+    this.fileType = fileType;
   }
 
-  public String getMusicFrom() {
-    return musicFrom;
+  public int getFileSize() {
+    return fileSize;
   }
 
-  public void setMusicFrom(String musicFrom) {
-    this.musicFrom = musicFrom;
+  public void setFileSize(int fileSize) {
+    this.fileSize = fileSize;
+  }
+
+  public String getTags() {
+    return tags;
+  }
+
+  public void setTags(String tags) {
+    this.tags = tags;
   }
 
   public int getMusicDuration() {
@@ -131,19 +114,19 @@ public class MusicInfo {
     this.musicDuration = musicDuration;
   }
 
-  public int getPlayDuration() {
-    return playDuration;
+  public Date getCreatedAt() {
+    return createdAt;
   }
 
-  public void setPlayDuration(int playDuration) {
-    this.playDuration = playDuration;
+  public void setCreatedAt(Date createdAt) {
+    this.createdAt = createdAt;
   }
 
-  public String getMusicAction() {
-    return musicAction;
+  public Date getUpdatedAt() {
+    return updatedAt;
   }
 
-  public void setMusicAction(String musicAction) {
-    this.musicAction = musicAction;
+  public void setUpdatedAt(Date updatedAt) {
+    this.updatedAt = updatedAt;
   }
 }

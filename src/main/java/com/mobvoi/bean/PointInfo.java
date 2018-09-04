@@ -6,21 +6,24 @@ import java.io.Serializable;
 import java.util.List;
 
 /**
+ * 埋点信息
  * created by zhhgao@mobvoi.com on 18-8-22
  */
 public class PointInfo implements Serializable {
-  //酷我用户ID
-  private String userID;
-  //音乐ID
-  private String musicID;
-  //音乐时长(单位:秒)
-  private int musicDuration;
-  //播放时长(单位:秒)
-  private int playDuration;
-  //动作：收藏（喜欢）、踩、上一曲、下一曲等。
-  private String musicAction;
-  //标签ID列表
-  private List<String> tags;
+
+  private String userID;//酷我用户ID
+
+  private String musicID;//音乐ID
+
+  private int musicDuration;//音乐时长(单位:秒)
+
+  private int playDuration;//播放时长(单位:秒)
+
+  private int musicAction;//动作：详见Const常量类。
+
+  private int comeFrom;//音乐来源：详见Const常量类。
+
+  private List<String> tags;//标签ID列表
 
   public String getUserID() {
     return userID;
@@ -54,12 +57,20 @@ public class PointInfo implements Serializable {
     this.playDuration = playDuration;
   }
 
-  public String getMusicAction() {
+  public int getMusicAction() {
     return musicAction;
   }
 
-  public void setMusicAction(String musicAction) {
+  public void setMusicAction(int musicAction) {
     this.musicAction = musicAction;
+  }
+
+  public int getComeFrom() {
+    return comeFrom;
+  }
+
+  public void setComeFrom(int comeFrom) {
+    this.comeFrom = comeFrom;
   }
 
   public List<String> getTags() {
