@@ -2,11 +2,8 @@
 
 package com.mobvoi;
 import com.alibaba.fastjson.JSONObject;
-import com.mobvoi.bean.MusicInfo;
-import com.mobvoi.bean.PersonaInfo;
 import com.mobvoi.bean.PointInfo;
 import com.mobvoi.util.PropertiesUtil;
-import java.util.List;
 import org.apache.spark.SparkContext;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.function.Function;
@@ -14,6 +11,7 @@ import org.apache.spark.rdd.RDD;
 import org.apache.spark.sql.SparkSession;
 
 /**
+ * 用户标签计算 spark job
  * created by zhhgao@mobvoi.com on 18-8-21
  */
 public class ProcessPersona {
@@ -38,7 +36,7 @@ public class ProcessPersona {
   /**
    * 1.更新音乐过滤表
    * 2.计算本次用户标签权值
-   * 3.根据标签生成过滤后的推荐音乐列表
+   * 3.根据用户是否已经拥有标签，进行增加/更新用户标签操作
    */
   public static void main(String[] args) {
 
