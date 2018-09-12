@@ -5,4 +5,4 @@ spark2-submit \
 --class com.mobvoi.TestReadTxT \
 --master yarn \
 --deploy-mode client \
---jars /spark-test/persona-1.0-SNAPSHOT/lib/*.jar $JAR_PATH
+$JAR_PATH \
