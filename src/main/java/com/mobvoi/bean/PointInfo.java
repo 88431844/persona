@@ -9,6 +9,7 @@ import java.util.List;
  * 埋点信息
  * created by zhhgao@mobvoi.com on 18-8-22
  */
+@Deprecated
 public class PointInfo implements Serializable {
 
   private String userID;//酷我用户ID
