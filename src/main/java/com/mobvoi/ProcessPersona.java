@@ -13,7 +13,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.spark.SparkContext;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.Function;
@@ -90,8 +89,7 @@ public class ProcessPersona {
       }
     }
 
-    SparkContext sc = ss.sparkContext();
-    JavaSparkContext jsc = new JavaSparkContext(sc);
+    JavaSparkContext jsc = JavaSparkContext.fromSparkContext(ss.sparkContext());
     Broadcast<Map<String, String>> tagsCast = jsc.broadcast(tagsMap);
 
     //切换使用的hive数据库
