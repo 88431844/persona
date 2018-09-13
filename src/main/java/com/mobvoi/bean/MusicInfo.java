@@ -8,6 +8,7 @@ import java.util.Date;
 /**
  * created by zhhgao@mobvoi.com on 18-8-21
  */
+@Deprecated
 public class MusicInfo implements Serializable {
 
   private String musicID;//音乐ID

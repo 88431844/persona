@@ -5,7 +5,7 @@ package com.mobvoi.bean;
 import java.io.Serializable;
 
 /**
- * 标签信息
+ * 标签信息 实体类
  * created by zhhgao@mobvoi.com on 18-8-22
  */
 public class TagInfo implements Serializable {
