@@ -2,9 +2,7 @@
 
 package com.mobvoi.util;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
@@ -13,6 +11,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 /**
  * created by zhhgao@mobvoi.com on 18-8-21
  */
@@ -89,10 +89,24 @@ public class PropertiesUtil implements Serializable {
     return allParam;
   }
 
+  @Deprecated
   public static String getProperties(String key){
     //String path = PropertiesUtil.class.getClassLoader().getResource(FILE_NAME).getPath();
     String value = getPropertiesByKey(FILE_NAME, key);
     //logger.info("配置在此"+FILE_NAME+"---"+value+" 路径："+path);
     return value;
+  }
+
+  /**
+   * 读取jar包外部配置文件
+   */
+  public static String getPropertiesOut(String key) {
+    Properties props = new Properties();
+    try {
+      props.load(new FileInputStream(FILE_NAME));
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+    return props.getProperty(key);
   }
 }
