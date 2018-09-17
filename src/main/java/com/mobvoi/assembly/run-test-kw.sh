@@ -5,4 +5,5 @@ spark2-submit \
 --class com.mobvoi.TestReadTxT \
 --master yarn \
 --deploy-mode client \
+--files config.properties \
 $JAR_PATH \
