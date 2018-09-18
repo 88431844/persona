@@ -112,15 +112,11 @@ public class Const {
 
     PLAY_10(10, Double.parseDouble(PropertiesUtil.getPropertiesOut("play.percent.10.score"))),
 
-
     PLAY_25(25, Double.parseDouble(PropertiesUtil.getPropertiesOut("play.percent.25.score"))),
-
 
     PLAY_50(50, Double.parseDouble(PropertiesUtil.getPropertiesOut("play.percent.50.score"))),
 
-
     PLAY_75(75, Double.parseDouble(PropertiesUtil.getPropertiesOut("play.percent.75.score"))),
-
 
     PLAY_90(90, Double.parseDouble(PropertiesUtil.getPropertiesOut("play.percent.90.score")));
 
