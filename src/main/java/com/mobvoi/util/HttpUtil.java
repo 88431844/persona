@@ -13,6 +13,7 @@ import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
 
 /**
+ * HTTP 请求工具类
  * created by zhhgao@mobvoi.com on 2018/4/17
  */
 public class HttpUtil {

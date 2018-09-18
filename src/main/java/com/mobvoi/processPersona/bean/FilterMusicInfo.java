@@ -1,8 +1,6 @@
 // Copyright 2018 Mobvoi Inc. All Rights Reserved.
 
-package com.mobvoi.bean;
-
-import java.util.List;
+package com.mobvoi.processPersona.bean;
 
 /**
  * 过滤用户音乐 实体类 created by zhhgao@mobvoi.com on 2018/9/13
@@ -11,7 +9,7 @@ public class FilterMusicInfo {
 
   private String userID;//酷我用户ID
 
-  private List<String> musicIDList;//过滤音乐ID列表
+  private String musicID;//过滤音乐ID
 
   public String getUserID() {
     return userID;
@@ -21,11 +19,11 @@ public class FilterMusicInfo {
     this.userID = userID;
   }
 
-  public List<String> getMusicIDList() {
-    return musicIDList;
+  public String getMusicID() {
+    return musicID;
   }
 
-  public void setMusicIDList(List<String> musicIDList) {
-    this.musicIDList = musicIDList;
+  public void setMusicID(String musicID) {
+    this.musicID = musicID;
   }
 }

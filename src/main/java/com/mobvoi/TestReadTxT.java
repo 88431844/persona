@@ -9,6 +9,7 @@ import org.apache.spark.rdd.RDD;
 import org.apache.spark.sql.SparkSession;
 
 /**
+ * 测试spark读取音乐meta信息
  * created by zhhgao@mobvoi.com on 2018/9/10
  */
 public class TestReadTxT {

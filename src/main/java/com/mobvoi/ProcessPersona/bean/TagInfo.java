@@ -1,6 +1,7 @@
 // Copyright 2018 Mobvoi Inc. All Rights Reserved.
 
-package com.mobvoi.bean;
+package com.mobvoi.processPersona.bean;
+
 
 import java.io.Serializable;
 

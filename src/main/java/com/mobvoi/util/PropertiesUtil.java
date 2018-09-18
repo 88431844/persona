@@ -14,6 +14,7 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 /**
+ * properties 读取工具类
  * created by zhhgao@mobvoi.com on 18-8-21
  */
 public class PropertiesUtil implements Serializable {
@@ -101,12 +102,20 @@ public class PropertiesUtil implements Serializable {
    * 读取jar包外部配置文件
    */
   public static String getPropertiesOut(String key) {
-    Properties props = new Properties();
-    try {
-      props.load(new FileInputStream(FILE_NAME));
-    } catch (Exception e) {
-      e.printStackTrace();
+    //判断map的size是否为零，如果为零则说明第一次启动，否则直接读取map
+    if (allParam.size() == 0) {
+      logger.info("init properties to map ...............");
+      Properties props = new Properties();
+      try {
+        props.load(new FileInputStream(FILE_NAME));
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+      Set<Entry<Object, Object>> allKey = props.entrySet();
+      for (Entry<Object, Object> entry : allKey) {
+        allParam.put(String.valueOf(entry.getKey()), String.valueOf(entry.getValue()));
+      }
     }
-    return props.getProperty(key);
+    return allParam.get(key);
   }
 }

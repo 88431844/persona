@@ -7,6 +7,7 @@ import org.apache.spark.rdd.RDD;
 import org.apache.spark.sql.SparkSession;
 
 /**
+ * 测试spark 读取hive
  * created by zhhgao@mobvoi.com on 2018/9/6
  */
 public class TestHive {
