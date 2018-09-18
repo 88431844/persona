@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.log4j.Logger;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
@@ -95,6 +96,11 @@ public class ProcessPersona {
    */
   private static double FILTER_MUSIC_PLAY_TIMES = Double
       .parseDouble(PropertiesUtil.getPropertiesOut("filter.music.play.times"));
+
+  /**
+   * log
+   */
+  private static Logger log = Logger.getLogger(ProcessPersona.class);
 
   /**
    * 1.更新音乐过滤表 2.计算本次用户标签权值 3.根据用户是否已经拥有标签，进行增加/更新用户标签操作
