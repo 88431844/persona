@@ -21,7 +21,7 @@ public class HttpUtil {
   private static final Logger logger = Logger.getLogger(HttpUtil.class);
   public static final String CONTENT_TYPE_JSON = "application/json;charset=UTF-8";
 
-  public static String post(String url, String json, String contentType) {
+  public static String post(String url, String json) {
     String resStr = "";
     //创建默认的httpClient实例.
     CloseableHttpClient httpclient = null;
@@ -31,10 +31,10 @@ public class HttpUtil {
       //创建httppost
       httpclient = HttpClients.createDefault();
       HttpPost httpPost = new HttpPost(url);
-      httpPost.addHeader(HTTP.CONTENT_TYPE, contentType);
+      httpPost.addHeader(HTTP.CONTENT_TYPE, CONTENT_TYPE_JSON);
       StringEntity se = new StringEntity(json, "UTF-8");
       se.setContentEncoding("UTF-8");
-      se.setContentType(contentType);//发送json需要设置contentType
+      se.setContentType(CONTENT_TYPE_JSON);//发送json需要设置contentType
       httpPost.setEntity(se);
       response = httpclient.execute(httpPost);
       //解析返结果

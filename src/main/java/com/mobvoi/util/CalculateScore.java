@@ -2,7 +2,7 @@
 
 package com.mobvoi.util;
 
-import com.mobvoi.util.Const.playEnum;
+import com.mobvoi.util.EnumUtil.playEnum;
 
 /**
  * 权值计算 工具类 created by zhhgao@mobvoi.com on 2018/9/17
@@ -18,53 +18,53 @@ public class CalculateScore {
     double excitationScore = getExcitationScore(playProportion);//激励权值
 
     //音乐动作：收藏
-    if (Const.musicEnum.MUSIC_ACTION_COLLECTION.getCode() == musicAction) {
-      periodScore = Const.musicEnum.MUSIC_ACTION_COLLECTION.getScore();
+    if (EnumUtil.musicEnum.MUSIC_ACTION_COLLECTION.getCode() == musicAction) {
+      periodScore = EnumUtil.musicEnum.MUSIC_ACTION_COLLECTION.getScore();
     }
     //音乐动作：取消收藏
-    else if (Const.musicEnum.MUSIC_ACTION_COLLECTION_CANCEL.getCode() == musicAction) {
-      periodScore = Const.musicEnum.MUSIC_ACTION_COLLECTION_CANCEL.getScore();
+    else if (EnumUtil.musicEnum.MUSIC_ACTION_COLLECTION_CANCEL.getCode() == musicAction) {
+      periodScore = EnumUtil.musicEnum.MUSIC_ACTION_COLLECTION_CANCEL.getScore();
     }
     //音乐动作：下载完成
-    else if (Const.musicEnum.MUSIC_ACTION_DOWNLOAD_SUCCESS.getCode() == musicAction) {
-      periodScore = Const.musicEnum.MUSIC_ACTION_DOWNLOAD_SUCCESS.getScore();
+    else if (EnumUtil.musicEnum.MUSIC_ACTION_DOWNLOAD_SUCCESS.getCode() == musicAction) {
+      periodScore = EnumUtil.musicEnum.MUSIC_ACTION_DOWNLOAD_SUCCESS.getScore();
     }
     //音乐动作：下载后删除
-    else if (Const.musicEnum.MUSIC_ACTION_DOWNLOAD_DELETE.getCode() == musicAction) {
-      periodScore = Const.musicEnum.MUSIC_ACTION_DOWNLOAD_DELETE.getScore();
+    else if (EnumUtil.musicEnum.MUSIC_ACTION_DOWNLOAD_DELETE.getCode() == musicAction) {
+      periodScore = EnumUtil.musicEnum.MUSIC_ACTION_DOWNLOAD_DELETE.getScore();
     }
     //音乐动作：购买单曲
-    else if (Const.musicEnum.MUSIC_ACTION_BUY_SONG.getCode() == musicAction) {
-      periodScore = Const.musicEnum.MUSIC_ACTION_BUY_SONG.getScore();
+    else if (EnumUtil.musicEnum.MUSIC_ACTION_BUY_SONG.getCode() == musicAction) {
+      periodScore = EnumUtil.musicEnum.MUSIC_ACTION_BUY_SONG.getScore();
     }
     //音乐动作：购买会员
-    else if (Const.musicEnum.MUSIC_ACTION_BUY_VIP.getCode() == musicAction) {
-      periodScore = Const.musicEnum.MUSIC_ACTION_BUY_VIP.getScore();
+    else if (EnumUtil.musicEnum.MUSIC_ACTION_BUY_VIP.getCode() == musicAction) {
+      periodScore = EnumUtil.musicEnum.MUSIC_ACTION_BUY_VIP.getScore();
     }
     //音乐动作：查看歌词
-    else if (Const.musicEnum.MUSIC_ACTION_LOOK_LYRICS.getCode() == musicAction) {
-      periodScore = Const.musicEnum.MUSIC_ACTION_LOOK_LYRICS.getScore();
+    else if (EnumUtil.musicEnum.MUSIC_ACTION_LOOK_LYRICS.getCode() == musicAction) {
+      periodScore = EnumUtil.musicEnum.MUSIC_ACTION_LOOK_LYRICS.getScore();
     }
 
     //音乐来源：上一首
-    else if (Const.musicEnum.COME_FROM_LAST.getCode() == comeFrom) {
-      periodScore = excitationScore + Const.musicEnum.COME_FROM_LAST.getScore();
+    else if (EnumUtil.musicEnum.COME_FROM_LAST.getCode() == comeFrom) {
+      periodScore = excitationScore + EnumUtil.musicEnum.COME_FROM_LAST.getScore();
     }
     //音乐来源：下一首
-    else if (Const.musicEnum.COME_FROM_NEXT.getCode() == comeFrom) {
-      periodScore = excitationScore + Const.musicEnum.COME_FROM_NEXT.getScore();
+    else if (EnumUtil.musicEnum.COME_FROM_NEXT.getCode() == comeFrom) {
+      periodScore = excitationScore + EnumUtil.musicEnum.COME_FROM_NEXT.getScore();
     }
     //音乐来源：随机列表
-    else if (Const.musicEnum.COME_FROM_RANDOM_LIST.getCode() == comeFrom) {
-      periodScore = excitationScore + Const.musicEnum.COME_FROM_RANDOM_LIST.getScore();
+    else if (EnumUtil.musicEnum.COME_FROM_RANDOM_LIST.getCode() == comeFrom) {
+      periodScore = excitationScore + EnumUtil.musicEnum.COME_FROM_RANDOM_LIST.getScore();
     }
     //音乐来源：循环列表
-    else if (Const.musicEnum.COME_FROM_LOOP_LIST.getCode() == comeFrom) {
-      periodScore = excitationScore + Const.musicEnum.COME_FROM_LOOP_LIST.getScore();
+    else if (EnumUtil.musicEnum.COME_FROM_LOOP_LIST.getCode() == comeFrom) {
+      periodScore = excitationScore + EnumUtil.musicEnum.COME_FROM_LOOP_LIST.getScore();
     }
     //音乐来源：搜索
-    else if (Const.musicEnum.COME_FROM_SEARCH.getCode() == comeFrom) {
-      periodScore = excitationScore + Const.musicEnum.COME_FROM_SEARCH.getScore();
+    else if (EnumUtil.musicEnum.COME_FROM_SEARCH.getCode() == comeFrom) {
+      periodScore = excitationScore + EnumUtil.musicEnum.COME_FROM_SEARCH.getScore();
     }
 
     return periodScore;

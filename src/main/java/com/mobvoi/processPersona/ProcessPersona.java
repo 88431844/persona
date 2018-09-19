@@ -4,25 +4,25 @@ package com.mobvoi.processPersona;
 
 
 import static com.mobvoi.util.CalculateScore.processUserTagsScore;
+import static com.mobvoi.util.CallService.requestUserTagsScore;
 import static com.mobvoi.util.ConvertData.convertMusicAction;
 import static com.mobvoi.util.ConvertData.convertMusicComeFrom;
 import static com.mobvoi.util.ConvertData.formatRowMap;
 import static com.mobvoi.util.ConvertData.getTagNames;
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.mobvoi.processPersona.bean.FilterMusicInfo;
 import com.mobvoi.processPersona.bean.FilterRule;
 import com.mobvoi.processPersona.bean.PersonaInfo;
 import com.mobvoi.processPersona.bean.TagInfo;
+import com.mobvoi.util.CallService;
+import com.mobvoi.util.Const;
 import com.mobvoi.util.HttpUtil;
 import com.mobvoi.util.PropertiesUtil;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
@@ -45,57 +45,56 @@ public class ProcessPersona {
    * spark job 名称
    */
   private static String APPLICATION_NAME = PropertiesUtil
-      .getPropertiesOut("spark.application.name");
+      .getProperties("spark.application.name", Const.CONFIG_PROCESS_PERSONA);
   /**
    * hive warehouse 地址
    */
   private static String HIVE_WARE_HOUSE = PropertiesUtil
-      .getPropertiesOut("spark.sql.warehouse.dir");
+      .getProperties("spark.sql.warehouse.dir", Const.CONFIG_PROCESS_PERSONA);
   /**
    * hive database
    */
-  private static String HIVE_DATABASE = PropertiesUtil.getPropertiesOut("hive.database");
+  private static String HIVE_DATABASE = PropertiesUtil
+      .getProperties("hive.database", Const.CONFIG_PROCESS_PERSONA);
   /**
    * hive sql
    */
-  private static String HIVE_SQL = PropertiesUtil.getPropertiesOut("hive.sql");
+  private static String HIVE_SQL = PropertiesUtil
+      .getProperties("hive.sql", Const.CONFIG_PROCESS_PERSONA);
   /**
    * 选择hive表查询出来的列
    */
-  private static String HIVE_SELECTED_COL = PropertiesUtil.getPropertiesOut("hive.selected.col");
-  /**
-   * 请求所有音乐tags信息的接口url
-   */
-  private static String ALL_MUSIC_TAGS_URL = PropertiesUtil.getPropertiesOut("all.music.tags.url");
-  /**
-   * 请求用户标签信息的接口url
-   */
-  private static String GET_USER_TAGS_URL = PropertiesUtil.getPropertiesOut("get.user.tags.url");
+  private static String HIVE_SELECTED_COL = PropertiesUtil
+      .getProperties("hive.selected.col", Const.CONFIG_PROCESS_PERSONA);
+
   /**
    * 更新用户标签信息的接口url
    */
   private static String UPDATE_USER_TAGS_URL = PropertiesUtil
-      .getPropertiesOut("update.user.tags.url");
+      .getProperties("update.user.tags.url", Const.CONFIG_PROCESS_PERSONA);
   /**
    * 更新音乐过滤表的接口url
    */
   private static String UPDATE_FILTER_MUSIC_URL = PropertiesUtil
-      .getPropertiesOut("update.filter.music.url");
+      .getProperties("update.filter.music.url", Const.CONFIG_PROCESS_PERSONA);
   /**
    * 用户标签时 间衰减系数
    */
   private static double USER_TAG_TIME_REDUCE_COEFFICIENT = Double
-      .parseDouble(PropertiesUtil.getPropertiesOut("user.tag.time.reduce.coefficient"));
+      .parseDouble(PropertiesUtil
+          .getProperties("user.tag.time.reduce.coefficient", Const.CONFIG_PROCESS_PERSONA));
   /**
    * 过滤音乐列表 播放百分比 阈值
    */
   private static double FILTER_MUSIC_PLAY_PROPORTION = Double
-      .parseDouble(PropertiesUtil.getPropertiesOut("filter.music.play.proportion"));
+      .parseDouble(PropertiesUtil
+          .getProperties("filter.music.play.proportion", Const.CONFIG_PROCESS_PERSONA));
   /**
    * 过滤音乐列表 每日播放次数 阈值
    */
   private static double FILTER_MUSIC_PLAY_TIMES = Double
-      .parseDouble(PropertiesUtil.getPropertiesOut("filter.music.play.times"));
+      .parseDouble(
+          PropertiesUtil.getProperties("filter.music.play.times", Const.CONFIG_PROCESS_PERSONA));
 
   /**
    * log
@@ -116,20 +115,9 @@ public class ProcessPersona {
      * 设置全量标签 广播变量
      */
     //调用接口读取所有标签ID和标签名称的HashMap，存为广播变量
-    Map<String, String> tagsMap = new HashMap<>();
-    JSONObject reqAllMusicTags = new JSONObject();
-    reqAllMusicTags.put("domain", "MUSIC");
-    String tagStr = HttpUtil
-        .post(ALL_MUSIC_TAGS_URL, reqAllMusicTags.toJSONString(), HttpUtil.CONTENT_TYPE_JSON);
-    if (StringUtils.isNotEmpty(tagStr)) {
-      JSONArray musicTagsArrayJson = JSONArray.parseArray(tagStr);
-      for (Object ob : musicTagsArrayJson) {
-        JSONObject tagJson = (JSONObject) ob;
-        tagsMap.put(tagJson.getString("tagName"), tagJson.getString("tagID"));
-      }
-    }
-
     JavaSparkContext jsc = JavaSparkContext.fromSparkContext(ss.sparkContext());
+    Map<String, String> tagsMap = CallService.requestAllMusicTags();
+    log.info("ProcessPersona broadcast tagsCast size : " + tagsMap.size());
     Broadcast<Map<String, String>> tagsCast = jsc.broadcast(tagsMap);
 
     //切换使用的hive数据库
@@ -161,45 +149,32 @@ public class ProcessPersona {
            * 计算最终用户标签权值（调接口获取上次权值*时间衰减系数 + 本次权值）
            */
           //获取该用户所有标签
-          Map<String, TagInfo> userLastTagInfoMap = new HashMap<>();//key为tagID，value为tagInfo
-          JSONObject requestUserTagsScore = new JSONObject();
-          requestUserTagsScore.put("userID", userID);
-          String userTagsStr = HttpUtil
-              .post(GET_USER_TAGS_URL, requestUserTagsScore.toJSONString(),
-                  HttpUtil.CONTENT_TYPE_JSON);
-
-          if (StringUtils.isNotEmpty(userTagsStr)) {
-            JSONArray userTagsArrayJson = JSONArray.parseArray(userTagsStr);
-            for (Object ob : userTagsArrayJson) {
-              JSONObject tagJson = (JSONObject) ob;
-              TagInfo tagInfo = new TagInfo();
-              tagInfo.setTagID(tagJson.getString("tagID"));
-              tagInfo.setPeriodScore(tagJson.getDouble("periodScore"));
-              userLastTagInfoMap.put(tagInfo.getTagID(), tagInfo);
-            }
-          }
-
-          //计算标签权值
-          List<String> tagNameList = getTagNames(rowMap);
+          Map<String, TagInfo> userLastTagInfoMap = requestUserTagsScore(
+              userID);//key为tagID，value为tagInfo
           List<TagInfo> tagInfoList = new ArrayList<>();
-          Map<String, String> tagCastMap = tagsCast.getValue();
-          if (null != tagCastMap && tagCastMap.size() > 0) {
-            for (String tagName : tagNameList) {
-              TagInfo tagInfo = new TagInfo();
-              //用从广播变量获取的 标签ID和标签名称的HashMap，把所有标签名称转换为标签ID
-              String tagID = tagCastMap.get(tagName);
-              tagInfo.setTagID(tagID);
-              if (null != userLastTagInfoMap.get(tagID)) {
-                //不等于null说明用户拥有该标签 进行累加计算
-                finalPeriodScore = thisPeriodScore + userLastTagInfoMap.get(tagID).getPeriodScore()
-                    * USER_TAG_TIME_REDUCE_COEFFICIENT;
-              } else {
-                //说明这个标签是用户新拥有的
-                finalPeriodScore = thisPeriodScore;
-              }
+          if (userLastTagInfoMap.size() > 0) {
+            //计算标签权值
+            List<String> tagNameList = getTagNames(rowMap);
 
-              tagInfo.setPeriodScore(finalPeriodScore);
-              tagInfoList.add(tagInfo);
+            Map<String, String> tagCastMap = tagsCast.getValue();
+            if (null != tagCastMap && tagCastMap.size() > 0) {
+              for (String tagName : tagNameList) {
+                TagInfo tagInfo = new TagInfo();
+                //用从广播变量获取的 标签ID和标签名称的HashMap，把所有标签名称转换为标签ID
+                String tagID = tagCastMap.get(tagName);
+                tagInfo.setTagID(tagID);
+                if (null != userLastTagInfoMap.get(tagID)) {
+                  //不等于null说明用户拥有该标签 进行累加计算
+                  finalPeriodScore =
+                      thisPeriodScore + userLastTagInfoMap.get(tagID).getPeriodScore()
+                          * USER_TAG_TIME_REDUCE_COEFFICIENT;
+                } else {
+                  //说明这个标签是用户新拥有的
+                  finalPeriodScore = thisPeriodScore;
+                }
+                tagInfo.setPeriodScore(finalPeriodScore);
+                tagInfoList.add(tagInfo);
+              }
             }
           }
 
@@ -294,8 +269,7 @@ public class ProcessPersona {
     updateFilterMusic.put("filterMusicInfoList", JSON.toJSONString(filterMusicInfoList));
     //TODO http 封装成接口
     String updateFilterMusicResponse = HttpUtil
-        .post(UPDATE_FILTER_MUSIC_URL, updateFilterMusic.toJSONString(),
-            HttpUtil.CONTENT_TYPE_JSON);
+        .post(UPDATE_FILTER_MUSIC_URL, updateFilterMusic.toJSONString());
     System.out.println("update filter music response :" + updateFilterMusicResponse);
 
     /**
@@ -305,8 +279,7 @@ public class ProcessPersona {
     JSONObject updateUserTagsScore = new JSONObject();
     updateUserTagsScore.put("personaInfoList", JSON.toJSONString(personaInfoList));
     String updateUserTagsResponse = HttpUtil
-        .post(UPDATE_USER_TAGS_URL, updateUserTagsScore.toJSONString(),
-            HttpUtil.CONTENT_TYPE_JSON);
+        .post(UPDATE_USER_TAGS_URL, updateUserTagsScore.toJSONString());
     System.out.println("update user tags response :" + updateUserTagsResponse);
   }
 }

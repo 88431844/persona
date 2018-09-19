@@ -2,6 +2,7 @@
 
 package com.mobvoi;
 
+import com.mobvoi.util.Const;
 import com.mobvoi.util.PropertiesUtil;
 import org.apache.spark.sql.SparkSession;
 
@@ -16,8 +17,10 @@ public class TestOutConf {
         .getOrCreate();
 
     System.out
-        .println("--------- one ----------:" + PropertiesUtil.getPropertiesOut("hive.database"));
+        .println("--------- one ----------:" + PropertiesUtil
+            .getProperties("hive.database", Const.CONFIG_PROCESS_PERSONA));
 
-    System.out.println("--------- two ----------:" + PropertiesUtil.getPropertiesOut("hive.sql"));
+    System.out.println("--------- two ----------:" + PropertiesUtil
+        .getProperties("hive.sql", Const.CONFIG_PROCESS_PERSONA));
   }
 }
