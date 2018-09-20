@@ -11,9 +11,13 @@ import java.io.Serializable;
  */
 public class TagInfo implements Serializable {
 
-  //标签ID
+  /**
+   * 标签ID
+   */
   private String tagID;
-  //标签区间权重
+  /**
+   * 标签区间权重
+   */
   private double periodScore;
 
   public String getTagID() {

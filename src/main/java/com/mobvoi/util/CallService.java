@@ -3,12 +3,15 @@
 package com.mobvoi.util;
 
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.mobvoi.processPersona.bean.PersonaInfo;
 import com.mobvoi.processPersona.bean.TagInfo;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.log4j.Logger;
 
 /**
  * created by zhhgao@mobvoi.com on 2018/9/18
@@ -19,14 +22,24 @@ public class CallService {
    * 请求用户标签信息的接口url
    */
   private static String GET_USER_TAGS_URL = PropertiesUtil
-      .getProperties("get.user.tags.url", Const.CONFIG_PROCESS_PERSONA);
+      .getProcessPersonaConf("get.user.tags.url");
 
   /**
    * 请求所有音乐tags信息的接口url
    */
   private static String ALL_MUSIC_TAGS_URL = PropertiesUtil
-      .getProperties("all.music.tags.url", Const.CONFIG_PROCESS_PERSONA);
+      .getProcessPersonaConf("all.music.tags.url");
 
+  /**
+   * 更新用户标签信息的接口url
+   */
+  private static String UPDATE_USER_TAGS_URL = PropertiesUtil
+      .getProcessPersonaConf("update.user.tags.url");
+
+  /**
+   * log
+   */
+  private static Logger log = Logger.getLogger(CallService.class);
   /**
    * 请求所有音乐标签
    *
@@ -69,6 +82,15 @@ public class CallService {
       }
     }
     return userLastTagInfoMap;
+  }
+
+  /**
+   * 同步（添加/更新）用户画像标签权值
+   */
+  public static void syncPersona(PersonaInfo personaInfo) {
+    JSONObject syncUserTagsScore = new JSONObject();
+    syncUserTagsScore.put("personaInfo", JSON.toJSONString(personaInfo));
+    HttpUtil.post(UPDATE_USER_TAGS_URL, syncUserTagsScore.toJSONString());
   }
 
 }

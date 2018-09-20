@@ -2,14 +2,21 @@
 
 package com.mobvoi.processPersona.bean;
 
+import java.io.Serializable;
+
 /**
  * 过滤用户音乐 实体类 created by zhhgao@mobvoi.com on 2018/9/13
  */
-public class FilterMusicInfo {
+public class FilterMusicInfo implements Serializable {
 
-  private String userID;//酷我用户ID
-
-  private String musicID;//过滤音乐ID
+  /**
+   * 酷我用户ID
+   */
+  private String userID;
+  /**
+   * 过滤音乐ID
+   */
+  private String musicID;
 
   public String getUserID() {
     return userID;

@@ -27,7 +27,7 @@ public class PropertiesUtil {
   /**
    * 根据配置文件和key取相应值
    */
-  public static String getProperties(String key, String configFiles) {
+  private static String getProperties(String key, String configFiles) {
     if (null != key && null != configFiles) {
       Map<String, String> propertiesMap = allParam.get(configFiles);
       if (null == propertiesMap || 0 == propertiesMap.size()) {
@@ -60,5 +60,25 @@ public class PropertiesUtil {
     }
   }
 
+  /**
+   * 读取 用户画像 配置文件
+   */
+  public static String getProcessPersonaConf(String key) {
+    return getProperties(key, Const.CONFIG_PROCESS_PERSONA);
+  }
+
+  /**
+   * 读取 处理音乐meta 配置文件
+   */
+  public static String getProcessMusicMetaConf(String key) {
+    return getProperties(key, Const.CONFIG_PROCESS_MUSICMETA);
+  }
+
+  /**
+   * 读取 离线推荐音乐 配置文件
+   */
+  public static String getProcessOfflineRecommendConf(String key) {
+    return getProperties(key, Const.CONFIG_OFFLINE_RECOMMEND);
+  }
 
 }

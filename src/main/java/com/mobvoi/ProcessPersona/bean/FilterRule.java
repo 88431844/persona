@@ -3,18 +3,32 @@
 package com.mobvoi.processPersona.bean;
 
 
+import java.io.Serializable;
+
 /**
  * 过滤音乐规则 实体类 created by zhhgao@mobvoi.com on 2018/9/14
  */
-public class FilterRule {
+public class FilterRule implements Serializable {
 
-  private String userID;//酷我用户ID
+  /**
+   * 酷我用户ID
+   */
+  private String userID;
 
-  private String musicID;//音乐ID
+  /**
+   * 音乐ID
+   */
+  private String musicID;
 
-  private double playProportion;//播放百分比
+  /**
+   * 播放百分比
+   */
+  private double playProportion;
 
-  private int playTimes;//播放次数
+  /**
+   * 播放次数
+   */
+  private int playTimes;
 
   public String getMusicID() {
     return musicID;

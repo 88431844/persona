@@ -12,33 +12,54 @@ import java.util.List;
  */
 public class PersonaInfo implements Serializable {
 
-  private String userID;//酷我用户ID
+  /**
+   * 酷我用户ID
+   */
+  private String kwID;
+  /**
+   * 要添加的标签信息
+   */
+  private List<TagInfo> addTagInfoList;
+  /**
+   * 要更新的标签信息
+   */
+  private List<TagInfo> updateTagInfoList;
 
-  private String musicID;//音乐ID
+  /**
+   * 埋点信息 列表
+   */
+  private List<PointInfo> pointInfoList;
 
-  private List<TagInfo> tagInfoList;//标签列表
-
-  public String getUserID() {
-    return userID;
+  public String getKwID() {
+    return kwID;
   }
 
-  public void setUserID(String userID) {
-    this.userID = userID;
+  public void setKwID(String kwID) {
+    this.kwID = kwID;
   }
 
-  public List<TagInfo> getTagInfoList() {
-    return tagInfoList;
+  public List<TagInfo> getAddTagInfoList() {
+    return addTagInfoList;
   }
 
-  public void setTagInfoList(List<TagInfo> tagInfoList) {
-    this.tagInfoList = tagInfoList;
+  public void setAddTagInfoList(List<TagInfo> addTagInfoList) {
+    this.addTagInfoList = addTagInfoList;
   }
 
-  public String getMusicID() {
-    return musicID;
+  public List<TagInfo> getUpdateTagInfoList() {
+    return updateTagInfoList;
   }
 
-  public void setMusicID(String musicID) {
-    this.musicID = musicID;
+  public void setUpdateTagInfoList(
+      List<TagInfo> updateTagInfoList) {
+    this.updateTagInfoList = updateTagInfoList;
+  }
+
+  public List<PointInfo> getPointInfoList() {
+    return pointInfoList;
+  }
+
+  public void setPointInfoList(List<PointInfo> pointInfoList) {
+    this.pointInfoList = pointInfoList;
   }
 }

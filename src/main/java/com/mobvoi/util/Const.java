@@ -23,4 +23,22 @@ public class Const {
    */
   public static String CONFIG_PROCESS_PERSONA = "config-ProcessPersona.properties";
 
+
+  /**
+   * 埋点数据中json中的酷我ID名称
+   */
+  public static String JSON_KW_ID = PropertiesUtil.getProcessPersonaConf("json.kw.id");
+
+  /**
+   * 选择hive表查询出来的account列
+   */
+  public static String HIVE_ACCOUNT_COL = PropertiesUtil
+      .getProcessPersonaConf("hive.account.col");
+
+  /**
+   * 选择hive表查询出来的properties列
+   */
+  public static String HIVE_PROPERTIES_COL = PropertiesUtil
+      .getProcessPersonaConf("hive.properties.col");
+
 }
