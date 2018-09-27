@@ -6,6 +6,7 @@ package com.mobvoi.util;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.mobvoi.processPersona.bean.FilterMusicInfo;
 import com.mobvoi.processPersona.bean.PersonaInfo;
 import com.mobvoi.processPersona.bean.TagInfo;
 import java.util.HashMap;
@@ -35,11 +36,16 @@ public class CallService {
    */
   private static String SYNC_PERSONA_URL = PropertiesUtil
       .getProcessPersonaConf("sync.persona.url");
-
+  /**
+   * 更新音乐过滤表的接口url
+   */
+  private static String UPDATE_FILTER_MUSIC_URL = PropertiesUtil
+      .getProcessPersonaConf("update.filter.music.url");
   /**
    * log
    */
   private static Logger log = Logger.getLogger(CallService.class);
+
   /**
    * 请求所有音乐标签
    *
@@ -101,4 +107,12 @@ public class CallService {
     HttpUtil.post(SYNC_PERSONA_URL, syncUserTagsScore.toJSONString());
   }
 
+  /**
+   * 更新某个用户的过滤音乐列表接口
+   */
+  public static void updateFilterMusicList(FilterMusicInfo filterMusicInfo) {
+    JSONObject updateFilterMusicList = new JSONObject();
+    updateFilterMusicList.put("filterMusicInfo", JSON.toJSONString(filterMusicInfo));
+    HttpUtil.post(UPDATE_FILTER_MUSIC_URL, updateFilterMusicList.toJSONString());
+  }
 }
