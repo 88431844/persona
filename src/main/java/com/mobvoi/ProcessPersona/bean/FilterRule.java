@@ -13,7 +13,7 @@ public class FilterRule implements Serializable {
   /**
    * 酷我用户ID
    */
-  private String userID;
+  private String kwID;
 
   /**
    * 音乐ID
@@ -54,11 +54,11 @@ public class FilterRule implements Serializable {
     this.playTimes = playTimes;
   }
 
-  public String getUserID() {
-    return userID;
+  public String getKwID() {
+    return kwID;
   }
 
-  public void setUserID(String userID) {
-    this.userID = userID;
+  public void setKwID(String kwID) {
+    this.kwID = kwID;
   }
 }
