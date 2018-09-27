@@ -12,18 +12,18 @@ public class FilterMusicInfo implements Serializable {
   /**
    * 酷我用户ID
    */
-  private String userID;
+  private String kwID;
   /**
    * 过滤音乐ID
    */
   private String musicID;
 
-  public String getUserID() {
-    return userID;
+  public String getKwID() {
+    return kwID;
   }
 
-  public void setUserID(String userID) {
-    this.userID = userID;
+  public void setKwID(String kwID) {
+    this.kwID = kwID;
   }
 
   public String getMusicID() {
