@@ -249,8 +249,8 @@ public class ProcessPersona {
       if (playTimes >= FILTER_MUSIC_PLAY_TIMES) {
         String[] key = v1._1.split(",");
         if (key.length == 2) {
-          String kwID = v1._1.split(",")[0];
-          String musicID = v1._1.split(",")[1];
+          String kwID = key[0];
+          String musicID = key[1];
           filterMusicInfo.setKwID(kwID);
           filterMusicInfo.setMusicID(musicID);
         }
