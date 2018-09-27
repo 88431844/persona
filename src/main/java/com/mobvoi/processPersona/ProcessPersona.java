@@ -36,7 +36,6 @@ import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import scala.Tuple2;
 
-
 /**
  * 用户标签计算 spark job created by zhhgao@mobvoi.com on 18-8-21
  */
@@ -215,7 +214,7 @@ public class ProcessPersona {
     /**
      * 处理过滤音乐列表
      */
-    JavaRDD<String> filterMusicRDD = personaInfoJavaRDD.mapPartitions(
+    JavaRDD<FilterMusicInfo> filterMusicRDD = personaInfoJavaRDD.mapPartitions(
         (FlatMapFunction<Iterator<PersonaInfo>, PointInfo>) personaInfoIterator -> {
           List<PointInfo> pointInfos = new ArrayList<>();
           while (personaInfoIterator.hasNext()) {
@@ -253,9 +252,12 @@ public class ProcessPersona {
           filterMusicInfo.setMusicID(musicID);
         }
       }
+      //过滤kwID和musicID为空的记录，不为空则更新过滤音乐列表
+      if (null != filterMusicInfo.getKwID() && null != filterMusicInfo.getMusicID()) {
+        CallService.updateFilterMusicList(filterMusicInfo);
+      }
       return filterMusicInfo;
-    }).filter((Function<FilterMusicInfo, Boolean>) v1 -> null != v1.getKwID())
-        .map((Function<FilterMusicInfo, String>) CallService::updateFilterMusicList);
+    });
 
     //为了以上所有转换操作执行，必须设置一个action来触发，first代价相对较小
     personaInfoJavaRDD.first();
