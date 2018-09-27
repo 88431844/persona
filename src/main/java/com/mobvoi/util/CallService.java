@@ -31,10 +31,10 @@ public class CallService {
       .getProcessPersonaConf("all.music.tags.url");
 
   /**
-   * 更新用户标签信息的接口url
+   * 同步用户画像标签权值的接口url
    */
-  private static String UPDATE_USER_TAGS_URL = PropertiesUtil
-      .getProcessPersonaConf("update.user.tags.url");
+  private static String SYNC_PERSONA_URL = PropertiesUtil
+      .getProcessPersonaConf("sync.persona.url");
 
   /**
    * log
@@ -49,13 +49,17 @@ public class CallService {
     Map<String, String> tagsMap = new HashMap<>();
     JSONObject reqAllMusicTags = new JSONObject();
     reqAllMusicTags.put("domain", "MUSIC");
-    String tagStr = HttpUtil
+    String responseStr = HttpUtil
         .post(ALL_MUSIC_TAGS_URL, reqAllMusicTags.toJSONString());
-    if (StringUtils.isNotEmpty(tagStr)) {
-      JSONArray musicTagsArrayJson = JSONArray.parseArray(tagStr);
-      for (Object ob : musicTagsArrayJson) {
-        JSONObject tagJson = (JSONObject) ob;
-        tagsMap.put(tagJson.getString("tagName"), tagJson.getString("tagID"));
+    if (StringUtils.isNotEmpty(responseStr)) {
+      JSONObject tags = JSON
+          .parseObject(String.valueOf(JSON.parseObject(responseStr).get("tags")));
+      if (StringUtils.isNotEmpty(tags.toJSONString())) {
+        JSONArray musicTagsArrayJson = JSONArray.parseArray(tags.toJSONString());
+        for (Object ob : musicTagsArrayJson) {
+          JSONObject tagJson = (JSONObject) ob;
+          tagsMap.put(tagJson.getString("tagName"), tagJson.getString("tagID"));
+        }
       }
     }
     return tagsMap;
@@ -64,33 +68,37 @@ public class CallService {
   /**
    * 请求该用户所有标签
    */
-  public static Map<String, TagInfo> requestUserTagsScore(String userID) {
+  public static Map<String, TagInfo> requestUserTagsScore(String kwID) {
     Map<String, TagInfo> userLastTagInfoMap = new HashMap<>();
     JSONObject requestUserTagsScore = new JSONObject();
-    requestUserTagsScore.put("userID", userID);
-    String userTagsStr = HttpUtil
+    requestUserTagsScore.put("kwID", kwID);
+    String responseStr = HttpUtil
         .post(GET_USER_TAGS_URL, requestUserTagsScore.toJSONString());
 
-    if (StringUtils.isNotEmpty(userTagsStr)) {
-      JSONArray userTagsArrayJson = JSONArray.parseArray(userTagsStr);
-      for (Object ob : userTagsArrayJson) {
-        JSONObject tagJson = (JSONObject) ob;
-        TagInfo tagInfo = new TagInfo();
-        tagInfo.setTagID(tagJson.getString("tagID"));
-        tagInfo.setPeriodScore(tagJson.getDouble("periodScore"));
-        userLastTagInfoMap.put(tagInfo.getTagID(), tagInfo);
+    if (StringUtils.isNotEmpty(responseStr)) {
+      JSONObject tags = JSON
+          .parseObject(String.valueOf(JSON.parseObject(responseStr).get("tags")));
+      if (StringUtils.isNotEmpty(tags.toJSONString())) {
+        JSONArray userTagsArrayJson = JSONArray.parseArray(tags.toJSONString());
+        for (Object ob : userTagsArrayJson) {
+          JSONObject tagJson = (JSONObject) ob;
+          TagInfo tagInfo = new TagInfo();
+          tagInfo.setTagID(tagJson.getString("tagID"));
+          tagInfo.setPeriodScore(tagJson.getDouble("periodScore"));
+          userLastTagInfoMap.put(tagInfo.getTagID(), tagInfo);
+        }
       }
     }
     return userLastTagInfoMap;
   }
 
   /**
-   * 同步（添加/更新）用户画像标签权值
+   * 同步用户画像标签权值
    */
   public static void syncPersona(PersonaInfo personaInfo) {
     JSONObject syncUserTagsScore = new JSONObject();
     syncUserTagsScore.put("personaInfo", JSON.toJSONString(personaInfo));
-    HttpUtil.post(UPDATE_USER_TAGS_URL, syncUserTagsScore.toJSONString());
+    HttpUtil.post(SYNC_PERSONA_URL, syncUserTagsScore.toJSONString());
   }
 
 }
