@@ -9,12 +9,15 @@ import static com.mobvoi.util.Const.JSON_KW_ID;
 import static com.mobvoi.util.ConvertData.convertRowToPointInfo;
 import static com.mobvoi.util.ConvertData.formatRowMap;
 
+import com.mobvoi.processPersona.bean.FilterMusicInfo;
+import com.mobvoi.processPersona.bean.FilterRule;
 import com.mobvoi.processPersona.bean.PersonaInfo;
 import com.mobvoi.processPersona.bean.PointInfo;
 import com.mobvoi.processPersona.bean.TagInfo;
 import com.mobvoi.util.CallService;
 import com.mobvoi.util.PropertiesUtil;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +27,7 @@ import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.Optional;
+import org.apache.spark.api.java.function.FlatMapFunction;
 import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.PairFunction;
 import org.apache.spark.broadcast.Broadcast;
@@ -58,12 +62,7 @@ public class ProcessPersona {
    */
   private static String HIVE_SQL = PropertiesUtil
       .getProcessPersonaConf("hive.sql");
-  /**
-   * 更新音乐过滤表的接口url
-   */
-  @Deprecated
-  private static String UPDATE_FILTER_MUSIC_URL = PropertiesUtil
-      .getProcessPersonaConf("update.filter.music.url");
+
   /**
    * 用户标签时 间衰减系数
    */
@@ -155,6 +154,9 @@ public class ProcessPersona {
               PersonaInfo personaInfo = new PersonaInfo();
               String kwID = v1._1;
               personaInfo.setKwID(kwID);
+              Map<String, TagInfo> userLastTagInfoMap = requestUserTagsScore(
+                  kwID);//key为tagID，value为tagInfo
+
               Tuple2<Optional<Iterable<PointInfo>>, Integer> tuple2 = v1._2;
               Optional<Iterable<PointInfo>> optional = tuple2._1;
               if (optional.isPresent()) {
@@ -173,9 +175,6 @@ public class ProcessPersona {
                   /**
                    * 计算最终用户标签权值（调接口获取上次权值*时间衰减系数 + 本次权值）
                    */
-                  Map<String, TagInfo> userLastTagInfoMap = requestUserTagsScore(
-                      kwID);//key为tagID，value为tagInfo
-
                   if (userLastTagInfoMap.size() > 0) {
                     Map<String, String> tagCastMap = tagsCast.getValue();
                     if (null != tagCastMap && tagCastMap.size() > 0) {
@@ -213,7 +212,55 @@ public class ProcessPersona {
         //缓存结果，为了计算过滤音乐列表
         .cache();
 
-    //TODO 处理过滤音乐列表
+    /**
+     * 处理过滤音乐列表
+     */
+    JavaRDD<String> filterMusicRDD = personaInfoJavaRDD.mapPartitions(
+        (FlatMapFunction<Iterator<PersonaInfo>, PointInfo>) personaInfoIterator -> {
+          List<PointInfo> pointInfos = new ArrayList<>();
+          while (personaInfoIterator.hasNext()) {
+            PersonaInfo personaInfo = personaInfoIterator.next();
+            pointInfos.addAll(personaInfo.getPointInfoList());
+          }
+          return Arrays.asList((PointInfo[]) pointInfos.toArray()).iterator();
+        }).mapToPair((PairFunction<PointInfo, String, FilterRule>) pointInfo -> {
+      FilterRule filterRule = new FilterRule();
+      String kwID = pointInfo.getKwID();
+      String musicID = pointInfo.getMusicID();
+      String key = kwID + "," + musicID;
+      filterRule.setKwID(kwID);
+      filterRule.setMusicID(pointInfo.getMusicID());
+      filterRule.setPlayProportion(pointInfo.getPlayProportion());
+      filterRule.setPlayTimes(0);
+      return new Tuple2<>(key, filterRule);
+    }).groupByKey().map((Function<Tuple2<String, Iterable<FilterRule>>, FilterMusicInfo>) v1 -> {
+      FilterMusicInfo filterMusicInfo = new FilterMusicInfo();
+      int playTimes = 0;
+      Iterator<FilterRule> iterator = v1._2.iterator();
+      while (iterator.hasNext()) {
+        FilterRule filterRule = iterator.next();
+        double playProportion = filterRule.getPlayProportion();
+        //大于播放比例设定的阈值，则算一次播放
+        if (playProportion >= FILTER_MUSIC_PLAY_PROPORTION) {
+          playTimes = playTimes + filterRule.getPlayTimes();
+        }
+      }
+      //如果大于播放次数阈值，则将该用户的这首音乐，加入该用户的过滤音乐列表中
+      if (playTimes >= FILTER_MUSIC_PLAY_TIMES) {
+        String[] key = v1._1.split(",");
+        if (key.length == 2) {
+          String kwID = v1._1.split(",")[0];
+          String musicID = v1._1.split(",")[1];
+          filterMusicInfo.setKwID(kwID);
+          filterMusicInfo.setMusicID(musicID);
+        }
+      }
+      return filterMusicInfo;
+    }).filter((Function<FilterMusicInfo, Boolean>) v1 -> null != v1.getKwID())
+        .map((Function<FilterMusicInfo, String>) CallService::updateFilterMusicList);
 
+    //为了以上所有转换操作执行，必须设置一个action来触发，first代价相对较小
+    personaInfoJavaRDD.first();
+    filterMusicRDD.first();
   }
 }
