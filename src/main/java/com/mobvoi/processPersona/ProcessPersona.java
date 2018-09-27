@@ -236,9 +236,7 @@ public class ProcessPersona {
     }).groupByKey().map((Function<Tuple2<String, Iterable<FilterRule>>, FilterMusicInfo>) v1 -> {
       FilterMusicInfo filterMusicInfo = new FilterMusicInfo();
       int playTimes = 0;
-      Iterator<FilterRule> iterator = v1._2.iterator();
-      while (iterator.hasNext()) {
-        FilterRule filterRule = iterator.next();
+      for (FilterRule filterRule : v1._2) {
         double playProportion = filterRule.getPlayProportion();
         //大于播放比例设定的阈值，则算一次播放
         if (playProportion >= FILTER_MUSIC_PLAY_PROPORTION) {
