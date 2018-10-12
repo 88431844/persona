@@ -116,23 +116,23 @@ public class EnumUtil {
   public enum playEnum {
 
     //播放百分比
-    PLAY_10_UNDER(10,
+    PLAY_10_UNDER(0.10,
         Double.parseDouble(
             PropertiesUtil.getProcessPersonaConf("play.percent.10.under.score"))),
 
-    PLAY_10(10,
+    PLAY_10(0.10,
         Double.parseDouble(PropertiesUtil.getProcessPersonaConf("play.percent.10.score"))),
 
-    PLAY_25(25,
+    PLAY_25(0.25,
         Double.parseDouble(PropertiesUtil.getProcessPersonaConf("play.percent.25.score"))),
 
-    PLAY_50(50,
+    PLAY_50(0.50,
         Double.parseDouble(PropertiesUtil.getProcessPersonaConf("play.percent.50.score"))),
 
-    PLAY_75(75,
+    PLAY_75(0.75,
         Double.parseDouble(PropertiesUtil.getProcessPersonaConf("play.percent.75.score"))),
 
-    PLAY_90(90,
+    PLAY_90(0.90,
         Double.parseDouble(PropertiesUtil.getProcessPersonaConf("play.percent.90.score")));
 
     playEnum(double percent, double score) {
