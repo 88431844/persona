@@ -7,17 +7,15 @@ import static com.mobvoi.util.CallService.requestUserTagsScore;
 import static com.mobvoi.util.Const.HIVE_ACCOUNT_COL;
 import static com.mobvoi.util.Const.JSON_KW_ID;
 import static com.mobvoi.util.ConvertData.convertRowToPointInfo;
-import static com.mobvoi.util.ConvertData.formatRowMap;
+import static com.mobvoi.util.ConvertData.formatRowMapForAccount;
 
-import com.mobvoi.processPersona.bean.FilterMusicInfo;
-import com.mobvoi.processPersona.bean.FilterRule;
+import com.alibaba.fastjson.JSON;
 import com.mobvoi.processPersona.bean.PersonaInfo;
 import com.mobvoi.processPersona.bean.PointInfo;
 import com.mobvoi.processPersona.bean.TagInfo;
 import com.mobvoi.util.CallService;
 import com.mobvoi.util.PropertiesUtil;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -27,7 +25,6 @@ import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.Optional;
-import org.apache.spark.api.java.function.FlatMapFunction;
 import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.PairFunction;
 import org.apache.spark.broadcast.Broadcast;
@@ -92,8 +89,10 @@ public class ProcessPersona {
 
     SparkSession ss = SparkSession.builder()
         .appName(APPLICATION_NAME)
+        .master("local")
         .config("spark.sql.warehouse.dir", HIVE_WARE_HOUSE)
-        .enableHiveSupport().getOrCreate();
+        .enableHiveSupport()
+        .getOrCreate();
 
     /**
      * 设置全量标签 广播变量
@@ -106,14 +105,18 @@ public class ProcessPersona {
 
     //切换使用的hive数据库
     ss.sql("use " + HIVE_DATABASE);
-
-    Dataset<Row> rowDataSet = ss.sql(HIVE_SQL).cache();
+//    ss.read().json("/Users/luck/Downloads/1.json").show();
+//    Dataset<Row> rowDataSet = ss.sql(HIVE_SQL).cache();
+//    Dataset<Row> rowDataSet = ss.read().json("/Users/luck/Downloads/fake-pointData201810102014.json");
+    Dataset<Row> rowDataSet = ss.read()
+        .json("/Users/luck/Downloads/fake-pointData201810121808.json");
 
     //获取去重后的kwIDs
     JavaPairRDD<String, Integer> kwIDsRDD = rowDataSet.select(HIVE_ACCOUNT_COL).toJavaRDD()
+//    JavaPairRDD<String, Integer> kwIDsRDD = rowDataSet.toJavaRDD()
         .mapToPair(
             (PairFunction<Row, String, Integer>) row -> {
-              Map<String, Object> accountMap = formatRowMap(row);
+              Map<String, String> accountMap = formatRowMapForAccount(row);
               String kwID = String.valueOf(accountMap.get(JSON_KW_ID));
               return new Tuple2<>(kwID, 0);
             })
@@ -132,7 +135,6 @@ public class ProcessPersona {
         (PairFunction<Row, String, PointInfo>) row -> {
 
           PointInfo pointInfo = convertRowToPointInfo(row);
-
           return new Tuple2<>(pointInfo.getKwID(), pointInfo);
         })
         .groupByKey()//按照key：kwID进行分组
@@ -182,6 +184,7 @@ public class ProcessPersona {
                         //用从广播变量获取的 标签ID和标签名称的HashMap，把所有标签名称转换为标签ID
                         String tagID = tagCastMap.get(tagName);
                         tagInfo.setTagID(tagID);
+                        tagInfo.setTagName(tagName);
                         if (null != userLastTagInfoMap.get(tagID)) {
                           //不等于null说明用户拥有该标签 进行累加计算
                           finalPeriodScore =
@@ -202,7 +205,7 @@ public class ProcessPersona {
                 personaInfo.setAddTagInfoList(addTagInfoList);
                 personaInfo.setUpdateTagInfoList(updateTagInfoList);
                 personaInfo.setPointInfoList(pointInfoList);
-
+                log.info("+++++++ personaInfo : " + JSON.toJSONString(personaInfo));
                 //同步用户画像标签权值
                 CallService.syncPersona(personaInfo);
               }
@@ -214,53 +217,55 @@ public class ProcessPersona {
     /**
      * 处理过滤音乐列表
      */
-    JavaRDD<FilterMusicInfo> filterMusicRDD = personaInfoJavaRDD.mapPartitions(
-        (FlatMapFunction<Iterator<PersonaInfo>, PointInfo>) personaInfoIterator -> {
-          List<PointInfo> pointInfos = new ArrayList<>();
-          while (personaInfoIterator.hasNext()) {
-            PersonaInfo personaInfo = personaInfoIterator.next();
-            pointInfos.addAll(personaInfo.getPointInfoList());
-          }
-          return Arrays.asList((PointInfo[]) pointInfos.toArray()).iterator();
-        }).mapToPair((PairFunction<PointInfo, String, FilterRule>) pointInfo -> {
-      FilterRule filterRule = new FilterRule();
-      String kwID = pointInfo.getKwID();
-      String musicID = pointInfo.getMusicID();
-      String key = kwID + "," + musicID;
-      filterRule.setKwID(kwID);
-      filterRule.setMusicID(pointInfo.getMusicID());
-      filterRule.setPlayProportion(pointInfo.getPlayProportion());
-      filterRule.setPlayTimes(0);
-      return new Tuple2<>(key, filterRule);
-    }).groupByKey().map((Function<Tuple2<String, Iterable<FilterRule>>, FilterMusicInfo>) v1 -> {
-      FilterMusicInfo filterMusicInfo = new FilterMusicInfo();
-      int playTimes = 0;
-      for (FilterRule filterRule : v1._2) {
-        double playProportion = filterRule.getPlayProportion();
-        //大于播放比例设定的阈值，则算一次播放
-        if (playProportion >= FILTER_MUSIC_PLAY_PROPORTION) {
-          playTimes = playTimes + filterRule.getPlayTimes();
-        }
-      }
-      //如果大于播放次数阈值，则将该用户的这首音乐，加入该用户的过滤音乐列表中
-      if (playTimes >= FILTER_MUSIC_PLAY_TIMES) {
-        String[] key = v1._1.split(",");
-        if (key.length == 2) {
-          String kwID = key[0];
-          String musicID = key[1];
-          filterMusicInfo.setKwID(kwID);
-          filterMusicInfo.setMusicID(musicID);
-        }
-      }
-      //过滤kwID和musicID为空的记录，不为空则更新过滤音乐列表
-      if (null != filterMusicInfo.getKwID() && null != filterMusicInfo.getMusicID()) {
-        CallService.updateFilterMusicList(filterMusicInfo);
-      }
-      return filterMusicInfo;
-    });
+//    JavaRDD<FilterMusicInfo> filterMusicRDD = personaInfoJavaRDD.mapPartitions(
+//        (FlatMapFunction<Iterator<PersonaInfo>, PointInfo>) personaInfoIterator -> {
+//          List<PointInfo> pointInfos = new ArrayList<>();
+//          while (personaInfoIterator.hasNext()) {
+//            PersonaInfo personaInfo = personaInfoIterator.next();
+//            pointInfos.addAll(personaInfo.getPointInfoList());
+//          }
+//          return Arrays.asList((PointInfo[]) pointInfos.toArray()).iterator();
+//        }).mapToPair((PairFunction<PointInfo, String, FilterRule>) pointInfo -> {
+//      FilterRule filterRule = new FilterRule();
+//      String kwID = pointInfo.getKwID();
+//      String musicID = pointInfo.getMusicID();
+//      String key = kwID + "," + musicID;
+//      filterRule.setKwID(kwID);
+//      filterRule.setMusicID(pointInfo.getMusicID());
+//      filterRule.setPlayProportion(pointInfo.getPlayProportion());
+//      filterRule.setPlayTimes(0);
+//      return new Tuple2<>(key, filterRule);
+//    }).groupByKey().map((Function<Tuple2<String, Iterable<FilterRule>>, FilterMusicInfo>) v1 -> {
+//      FilterMusicInfo filterMusicInfo = new FilterMusicInfo();
+//      int playTimes = 0;
+//      for (FilterRule filterRule : v1._2) {
+//        double playProportion = filterRule.getPlayProportion();
+//        //大于播放比例设定的阈值，则算一次播放
+//        if (playProportion >= FILTER_MUSIC_PLAY_PROPORTION) {
+//          playTimes = playTimes + filterRule.getPlayTimes();
+//        }
+//      }
+//      //如果大于播放次数阈值，则将该用户的这首音乐，加入该用户的过滤音乐列表中
+//      if (playTimes >= FILTER_MUSIC_PLAY_TIMES) {
+//        String[] key = v1._1.split(",");
+//        if (key.length == 2) {
+//          String kwID = key[0];
+//          String musicID = key[1];
+//          filterMusicInfo.setKwID(kwID);
+//          filterMusicInfo.setMusicID(musicID);
+//        }
+//      }
+//      //过滤kwID和musicID为空的记录，不为空则更新过滤音乐列表
+//      if (null != filterMusicInfo.getKwID() && null != filterMusicInfo.getMusicID()) {
+//        CallService.updateFilterMusicList(filterMusicInfo);
+//      }
+//      return filterMusicInfo;
+//    });
 
     //为了以上所有转换操作执行，必须设置一个action来触发，first代价相对较小
-    personaInfoJavaRDD.first();
-    filterMusicRDD.first();
+//    personaInfoJavaRDD.first();
+    personaInfoJavaRDD.count();
+//    filterMusicRDD.first();
+//    kwIDsRDD.first();
   }
 }
