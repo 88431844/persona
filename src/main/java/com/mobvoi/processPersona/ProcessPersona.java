@@ -90,8 +90,9 @@ public class ProcessPersona {
     SparkSession ss = SparkSession.builder()
         .appName(APPLICATION_NAME)
         .master("local")
-        .config("spark.sql.warehouse.dir", HIVE_WARE_HOUSE)
-        .enableHiveSupport()
+        //TODO 由于测试时候直接读取json文件，因此临时屏蔽hive功能
+//        .config("spark.sql.warehouse.dir", HIVE_WARE_HOUSE)
+//        .enableHiveSupport()
         .getOrCreate();
 
     /**
