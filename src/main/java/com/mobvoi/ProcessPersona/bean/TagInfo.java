@@ -16,9 +16,21 @@ public class TagInfo implements Serializable {
    */
   private String tagID;
   /**
+   * 标签名称
+   */
+  private String tagName;
+  /**
    * 标签区间权重
    */
   private double periodScore;
+
+  public String getTagName() {
+    return tagName;
+  }
+
+  public void setTagName(String tagName) {
+    this.tagName = tagName;
+  }
 
   public String getTagID() {
     return tagID;
