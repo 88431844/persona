@@ -25,11 +25,6 @@ public class FilterRule implements Serializable {
    */
   private double playProportion;
 
-  /**
-   * 播放次数
-   */
-  private int playTimes;
-
   public String getMusicID() {
     return musicID;
   }
@@ -44,14 +39,6 @@ public class FilterRule implements Serializable {
 
   public void setPlayProportion(double playProportion) {
     this.playProportion = playProportion;
-  }
-
-  public int getPlayTimes() {
-    return playTimes;
-  }
-
-  public void setPlayTimes(int playTimes) {
-    this.playTimes = playTimes;
   }
 
   public String getKwID() {
