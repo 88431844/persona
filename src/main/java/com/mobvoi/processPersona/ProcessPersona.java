@@ -10,12 +10,15 @@ import static com.mobvoi.util.ConvertData.convertRowToPointInfo;
 import static com.mobvoi.util.ConvertData.formatRowMapForAccount;
 
 import com.alibaba.fastjson.JSON;
+import com.mobvoi.processPersona.bean.FilterMusicInfo;
+import com.mobvoi.processPersona.bean.FilterRule;
 import com.mobvoi.processPersona.bean.PersonaInfo;
 import com.mobvoi.processPersona.bean.PointInfo;
 import com.mobvoi.processPersona.bean.TagInfo;
 import com.mobvoi.util.CallService;
 import com.mobvoi.util.PropertiesUtil;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +28,7 @@ import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.Optional;
+import org.apache.spark.api.java.function.FlatMapFunction;
 import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.PairFunction;
 import org.apache.spark.broadcast.Broadcast;
@@ -74,9 +78,8 @@ public class ProcessPersona {
   /**
    * 过滤音乐列表 每日播放次数 阈值
    */
-  private static double FILTER_MUSIC_PLAY_TIMES = Double
-      .parseDouble(
-          PropertiesUtil.getProcessPersonaConf("filter.music.play.times"));
+  private static int FILTER_MUSIC_PLAY_TIMES = Integer.parseInt(
+      PropertiesUtil.getProcessPersonaConf("filter.music.play.times"));
   /**
    * log
    */
@@ -206,6 +209,7 @@ public class ProcessPersona {
                 personaInfo.setAddTagInfoList(addTagInfoList);
                 personaInfo.setUpdateTagInfoList(updateTagInfoList);
                 personaInfo.setPointInfoList(pointInfoList);
+
                 log.info("+++++++ personaInfo : " + JSON.toJSONString(personaInfo));
                 //同步用户画像标签权值
                 CallService.syncPersona(personaInfo);
@@ -214,59 +218,64 @@ public class ProcessPersona {
             })
         //缓存结果，为了计算过滤音乐列表
         .cache();
-
     /**
      * 处理过滤音乐列表
      */
-//    JavaRDD<FilterMusicInfo> filterMusicRDD = personaInfoJavaRDD.mapPartitions(
-//        (FlatMapFunction<Iterator<PersonaInfo>, PointInfo>) personaInfoIterator -> {
-//          List<PointInfo> pointInfos = new ArrayList<>();
-//          while (personaInfoIterator.hasNext()) {
-//            PersonaInfo personaInfo = personaInfoIterator.next();
-//            pointInfos.addAll(personaInfo.getPointInfoList());
-//          }
-//          return Arrays.asList((PointInfo[]) pointInfos.toArray()).iterator();
-//        }).mapToPair((PairFunction<PointInfo, String, FilterRule>) pointInfo -> {
-//      FilterRule filterRule = new FilterRule();
-//      String kwID = pointInfo.getKwID();
-//      String musicID = pointInfo.getMusicID();
-//      String key = kwID + "," + musicID;
-//      filterRule.setKwID(kwID);
-//      filterRule.setMusicID(pointInfo.getMusicID());
-//      filterRule.setPlayProportion(pointInfo.getPlayProportion());
-//      filterRule.setPlayTimes(0);
-//      return new Tuple2<>(key, filterRule);
-//    }).groupByKey().map((Function<Tuple2<String, Iterable<FilterRule>>, FilterMusicInfo>) v1 -> {
-//      FilterMusicInfo filterMusicInfo = new FilterMusicInfo();
-//      int playTimes = 0;
-//      for (FilterRule filterRule : v1._2) {
-//        double playProportion = filterRule.getPlayProportion();
-//        //大于播放比例设定的阈值，则算一次播放
-//        if (playProportion >= FILTER_MUSIC_PLAY_PROPORTION) {
-//          playTimes = playTimes + filterRule.getPlayTimes();
-//        }
-//      }
-//      //如果大于播放次数阈值，则将该用户的这首音乐，加入该用户的过滤音乐列表中
-//      if (playTimes >= FILTER_MUSIC_PLAY_TIMES) {
-//        String[] key = v1._1.split(",");
-//        if (key.length == 2) {
-//          String kwID = key[0];
-//          String musicID = key[1];
-//          filterMusicInfo.setKwID(kwID);
-//          filterMusicInfo.setMusicID(musicID);
-//        }
-//      }
-//      //过滤kwID和musicID为空的记录，不为空则更新过滤音乐列表
-//      if (null != filterMusicInfo.getKwID() && null != filterMusicInfo.getMusicID()) {
-//        CallService.updateFilterMusicList(filterMusicInfo);
-//      }
-//      return filterMusicInfo;
-//    });
+    JavaRDD<FilterMusicInfo> filterMusicRDD = personaInfoJavaRDD.mapPartitions(
+        (FlatMapFunction<Iterator<PersonaInfo>, PointInfo>) personaInfoIterator -> {
+          List<PointInfo> pointInfos = new ArrayList<>();
+          while (personaInfoIterator.hasNext()) {
+            PersonaInfo personaInfo = personaInfoIterator.next();
+            pointInfos.addAll(personaInfo.getPointInfoList());
+          }
+          PointInfo[] ps = new PointInfo[pointInfos.size()];
 
-    //为了以上所有转换操作执行，必须设置一个action来触发，first代价相对较小
-//    personaInfoJavaRDD.first();
+          for (int i = 0; i < pointInfos.size(); i++) {
+            if (null != pointInfos.get(i)) {
+              ps[i] = pointInfos.get(i);
+            }
+          }
+          return Arrays.asList(ps).iterator();
+        }).mapToPair((PairFunction<PointInfo, String, FilterRule>) pointInfo -> {
+      FilterRule filterRule = new FilterRule();
+      String kwID = pointInfo.getKwID();
+      String musicID = pointInfo.getMusicID();
+      String key = kwID + "," + musicID;
+      filterRule.setKwID(kwID);
+      filterRule.setMusicID(pointInfo.getMusicID());
+      filterRule.setPlayProportion(pointInfo.getPlayProportion());
+
+      return new Tuple2<>(key, filterRule);
+    }).groupByKey().map((Function<Tuple2<String, Iterable<FilterRule>>, FilterMusicInfo>) v1 -> {
+      FilterMusicInfo filterMusicInfo = new FilterMusicInfo();
+      int playTimes = 0;
+      for (FilterRule filterRule : v1._2) {
+        double playProportion = filterRule.getPlayProportion();
+        //大于播放比例设定的阈值，则算一次播放
+        if (playProportion >= FILTER_MUSIC_PLAY_PROPORTION) {
+          playTimes++;
+        }
+      }
+      //如果大于播放次数阈值，则将该用户的这首音乐，加入该用户的过滤音乐列表中
+      if (playTimes >= FILTER_MUSIC_PLAY_TIMES) {
+        String[] key = v1._1.split(",");
+        if (key.length == 2) {
+          String kwID = key[0];
+          String musicID = key[1];
+          filterMusicInfo.setKwID(kwID);
+          filterMusicInfo.setMusicID(musicID);
+        }
+      }
+      //过滤kwID和musicID为空的记录，不为空则更新过滤音乐列表
+      if (null != filterMusicInfo.getKwID() || null != filterMusicInfo.getMusicID()) {
+        CallService.updateFilterMusicList(filterMusicInfo);
+      }
+      log.info("+++++++++++ filterMusicInfo :" + JSON.toJSONString(filterMusicInfo));
+      return filterMusicInfo;
+    });
+
+    //为了以上所有转换操作执行，必须设置一个action来触发，count代价相对较小，不会对driver造成很大的压力。
     personaInfoJavaRDD.count();
-//    filterMusicRDD.first();
-//    kwIDsRDD.first();
+    filterMusicRDD.count();
   }
 }
