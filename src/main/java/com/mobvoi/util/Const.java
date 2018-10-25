@@ -7,7 +7,10 @@ package com.mobvoi.util;
  */
 public class Const {
 
-
+  /**
+   * 通用 配置文件
+   */
+  public static String CONFIG_COMMON = "config-Common.properties";
   /**
    * 离线推荐音乐列表 spark job 配置文件
    */
@@ -41,4 +44,9 @@ public class Const {
   public static String HIVE_PROPERTIES_COL = PropertiesUtil
       .getProcessPersonaConf("hive.properties.col");
 
+  /**
+   * 用户权值 比较 系数（扩大N倍防止小数点位数过多，导致本应该有大小的比较，却认为是相等）
+   */
+  public static int COMPARE_COEFFICIENT = Integer
+      .parseInt(PropertiesUtil.getProcessOfflineRecommendConf("compare.coefficient"));
 }
