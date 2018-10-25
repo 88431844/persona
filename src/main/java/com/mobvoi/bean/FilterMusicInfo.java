@@ -1,8 +1,9 @@
 // Copyright 2018 Mobvoi Inc. All Rights Reserved.
 
-package com.mobvoi.processPersona.bean;
+package com.mobvoi.bean;
 
 import java.io.Serializable;
+import java.util.List;
 
 /**
  * 过滤用户音乐 实体类 created by zhhgao@mobvoi.com on 2018/9/13
@@ -14,9 +15,9 @@ public class FilterMusicInfo implements Serializable {
    */
   private String kwID;
   /**
-   * 过滤音乐ID
+   * 过滤音乐ID列表
    */
-  private String musicID;
+  private List<String> musicIDs;
 
   public String getKwID() {
     return kwID;
@@ -26,11 +27,11 @@ public class FilterMusicInfo implements Serializable {
     this.kwID = kwID;
   }
 
-  public String getMusicID() {
-    return musicID;
+  public List<String> getMusicIDs() {
+    return musicIDs;
   }
 
-  public void setMusicID(String musicID) {
-    this.musicID = musicID;
+  public void setMusicIDs(List<String> musicIDs) {
+    this.musicIDs = musicIDs;
   }
 }
