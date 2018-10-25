@@ -3,19 +3,18 @@
 package com.mobvoi.processPersona;
 
 
-import static com.mobvoi.util.CallService.requestUserTagsScore;
 import static com.mobvoi.util.Const.HIVE_ACCOUNT_COL;
 import static com.mobvoi.util.Const.JSON_KW_ID;
 import static com.mobvoi.util.ConvertData.convertRowToPointInfo;
 import static com.mobvoi.util.ConvertData.formatRowMapForAccount;
 
 import com.alibaba.fastjson.JSON;
-import com.mobvoi.processPersona.bean.FilterMusicInfo;
+import com.mobvoi.bean.FilterMusicInfo;
+import com.mobvoi.bean.TagInfo;
 import com.mobvoi.processPersona.bean.FilterRule;
 import com.mobvoi.processPersona.bean.PersonaInfo;
 import com.mobvoi.processPersona.bean.PointInfo;
-import com.mobvoi.processPersona.bean.TagInfo;
-import com.mobvoi.util.CallService;
+import com.mobvoi.processPersona.util.PersonaCallService;
 import com.mobvoi.util.PropertiesUtil;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -103,7 +102,7 @@ public class ProcessPersona {
      */
     //调用接口读取所有标签ID和标签名称的HashMap，存为广播变量
     JavaSparkContext jsc = JavaSparkContext.fromSparkContext(ss.sparkContext());
-    Map<String, String> tagsMap = CallService.requestAllMusicTags();
+    Map<String, String> tagsMap = PersonaCallService.getAllMusicTags();
     log.info("ProcessPersona broadcast tagsCast size : " + tagsMap.size());
     Broadcast<Map<String, String>> tagsCast = jsc.broadcast(tagsMap);
 
@@ -159,7 +158,7 @@ public class ProcessPersona {
               PersonaInfo personaInfo = new PersonaInfo();
               String kwID = v1._1;
               personaInfo.setKwID(kwID);
-              Map<String, TagInfo> userLastTagInfoMap = requestUserTagsScore(
+              Map<String, TagInfo> userLastTagInfoMap = PersonaCallService.getUserTagsScore(
                   kwID);//key为tagID，value为tagInfo
 
               Tuple2<Optional<Iterable<PointInfo>>, Integer> tuple2 = v1._2;
@@ -212,7 +211,7 @@ public class ProcessPersona {
 
                 log.info("+++++++ personaInfo : " + JSON.toJSONString(personaInfo));
                 //同步用户画像标签权值
-                CallService.syncPersona(personaInfo);
+                PersonaCallService.syncPersona(personaInfo);
               }
               return personaInfo;
             })
@@ -263,14 +262,16 @@ public class ProcessPersona {
           String kwID = key[0];
           String musicID = key[1];
           filterMusicInfo.setKwID(kwID);
-          filterMusicInfo.setMusicID(musicID);
+          List<String> musicIDs = new ArrayList<>();
+          musicIDs.add(musicID);
+          filterMusicInfo.setMusicIDs(musicIDs);
         }
       }
       //过滤kwID和musicID为空的记录，不为空则更新过滤音乐列表
-      if (null != filterMusicInfo.getKwID() || null != filterMusicInfo.getMusicID()) {
-        CallService.updateFilterMusicList(filterMusicInfo);
+      if (null != filterMusicInfo.getKwID() && filterMusicInfo.getMusicIDs().size() > 0) {
+        log.info("+++++++++++ filterMusicInfo :" + JSON.toJSONString(filterMusicInfo));
+        PersonaCallService.updateFilterMusicList(filterMusicInfo);
       }
-      log.info("+++++++++++ filterMusicInfo :" + JSON.toJSONString(filterMusicInfo));
       return filterMusicInfo;
     });
 
