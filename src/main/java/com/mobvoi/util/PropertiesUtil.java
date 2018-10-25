@@ -81,4 +81,11 @@ public class PropertiesUtil {
     return getProperties(key, Const.CONFIG_OFFLINE_RECOMMEND);
   }
 
+  /**
+   * 读取 通用 配置文件
+   */
+  public static String getCommonConf(String key) {
+    return getProperties(key, Const.CONFIG_COMMON);
+  }
+
 }
