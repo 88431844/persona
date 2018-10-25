@@ -3,6 +3,7 @@
 package com.mobvoi.processPersona.bean;
 
 
+import com.mobvoi.bean.TagInfo;
 import java.io.Serializable;
 import java.util.List;
 
